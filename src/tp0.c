@@ -21,6 +21,8 @@
 
 #define MAX_PARAM 6
 
+#define MAXIMUM_ITERATION  50
+
 enum ParameterState {
 	 OKEY = 0, INCORRECT_QUANTITY_PARAMS = 1, INCORRECT_MENU = 2, ERROR_FILE = 3, ERROR_MEMORY = 4
 };
@@ -96,7 +98,7 @@ void retrieveParams(int argc, char *argv[], params *p) {
 
 	int incorrectOption = FALSE;
 	int finish = FALSE;
-	int result = OKEY;
+	//int result = OKEY;
 	int longIndex = 0;
 	char opt = 0;
 
@@ -145,7 +147,7 @@ void retrieveParams(int argc, char *argv[], params *p) {
 	/*
 	 * Seteamos los parámetros faltantes si corresponden.
 	 */
-	setDefaultParams(&p);
+	setDefaultParams(p);
 }
 
 void executeFractal(params *p){
@@ -192,6 +194,99 @@ int execute(int argc, char *argv[]) {
 	 * Ejecutamos el fractal con los parámetros ingresados.
 	 */
 	executeFractal(&p);
+
+	return 0;
+}
+
+typedef struct number {
+	double realPart;
+	double imaginaryPart;
+
+} complex;
+
+// complex seed;
+// complex f;
+int maximumIteration = 50; //TODO
+
+double getPixelRe(complex center, int width, int y, int resolutionX, int resolutionY) {
+	if (resolutionX == 1 && resolutionY == 1) {
+		return center.realPart;
+	}
+
+	return (center.realPart - width/2 + y * (width/resolutionY));
+}
+
+double getPixelIm(complex center, int height, int x, int resolutionX, int resolutionY) {
+	if (resolutionX == 1 && resolutionY == 1) {
+		return center.imaginaryPart;
+	}
+
+	return (center.imaginaryPart + height/2 - x * (height/resolutionX));
+}
+
+int loadPixelsInFile(int matrixPixeles[][3], char * pathOutput, int sizeX, int sizeY) {
+	int tamBuffer = sizeX * sizeY + sizeY;
+	int buffer[tamBuffer];
+
+	int i = 0;
+	for (int y = 0; y < sizeY; ++y) {
+		for (int x = 0; x < sizeX; ++x) {
+			buffer[i] = matrixPixeles[x][y];
+			i++;
+		}
+
+		if ((tamBuffer - 1) == i) {
+			buffer[i] = '\n';
+		}
+	}
+
+	return 0;
+}
+
+int drawJuliaSet(int resolutionX, int resolutionY, complex center, int width, int height, complex seed, char * pathOutput) {
+
+	int matrixPixeles[resolutionX][resolutionY];
+	// Inicializo la matriz
+	for (int y = 0; y < resolutionY; y++) {
+		for (int x = 0; x < resolutionX; x++) {
+			matrixPixeles[x][y] = 0;
+		}
+	}
+
+	complex pixel;
+	// Me muevo por la matriz para pintar cada pixel
+	for (int y = 0; y < resolutionX; y++) {
+		for (int x = 0; x < resolutionX; x++) {
+			/*
+			 * Recorro la zona a pintar de arriba hacia abajo, de izquierda a derecha,
+			 * por lo que comienzo a pintar en la esquina superior izquierda.
+			 * Busco el complejo asociado al pixel
+			 */
+
+			pixel.realPart = getPixelRe(center, width, y, resolutionX, resolutionY);
+			pixel.imaginaryPart = getPixelIm(center, height, x, resolutionX, resolutionY);
+
+			int brillo = 0; // Brillo del pixel = cantidad de iteraciones
+			int finish = FALSE;
+			while (brillo < (MAXIMUM_ITERATION - 1) && finish == FALSE) {
+				// Dejo de iterar cuando el modulo del punto es mayor a 2
+				if ((pixel.realPart * pixel.realPart + pixel.imaginaryPart * pixel.imaginaryPart) > 4) {
+					finish = TRUE;
+				} else {
+					// $f = $f * $f + $s;
+					pixel.realPart = pixel.realPart * pixel.realPart - pixel.imaginaryPart * pixel.imaginaryPart + seed.realPart;
+					pixel.imaginaryPart = 2 * pixel.realPart * pixel.imaginaryPart + seed.imaginaryPart;
+
+					brillo++;
+				}
+			}
+
+			// Brillo del pixel
+			matrixPixeles[x][y] = brillo;
+		}
+	}
+
+	return loadPixelsInFile(matrixPixeles, pathOutput, resolutionX, resolutionY);
 }
 
 int main(int argc, char *argv[]) {
