@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <unistd.h>
 #include <getopt.h>
 
 #define VERSION "1.0"
@@ -25,6 +25,10 @@
 
 enum ParameterState {
 	 OKEY = 0, INCORRECT_QUANTITY_PARAMS = 1, INCORRECT_MENU = 2, ERROR_FILE = 3, ERROR_MEMORY = 4
+};
+
+enum ResultState {
+	RDO_OKEY = 0, ERROR_WRITE = -1
 };
 
 typedef struct params {
@@ -204,10 +208,6 @@ typedef struct number {
 
 } complex;
 
-// complex seed;
-// complex f;
-int maximumIteration = 50; //TODO
-
 double getPixelRe(complex center, int width, int y, int resolutionX, int resolutionY) {
 	if (resolutionX == 1 && resolutionY == 1) {
 		return center.realPart;
@@ -236,11 +236,44 @@ int loadPixelsInFile(int matrixPixeles[][3], char * pathOutput, int sizeX, int s
 		}
 
 		if ((tamBuffer - 1) == i) {
+			buffer[i] = '\0';
+		} else {
 			buffer[i] = '\n';
 		}
 	}
 
-	return 0;
+	FILE * fileOutput = stdout;
+
+	int outputFileDefault = FALSE;
+	if (pathOutput == NULL || strcmp("-",pathOutput) == 0) {
+		outputFileDefault = TRUE;
+	}
+
+	if (outputFileDefault == FALSE) {
+		fileOutput = fopen(pathOutput, "w"); // Opens a text file for writing. Pace the content.
+		if (fileOutput == NULL) {
+			fprintf(stderr, "[Error] El archivo de output no pudo ser abierto para escritura: %s \n", pathOutput);
+			return ERROR_FILE;
+		}
+	}
+
+	int ofd = fileno(fileOutput);
+
+	int bytesWrite = write(ofd, buffer, tamBuffer);
+	if (bytesWrite < 0) {
+		fprintf(stderr, "[Error] Hubo un error al escribir en el archivo. \n");
+
+		if (outputFileDefault == FALSE && fileOutput != NULL) {
+			int result = fclose(fileOutput);
+			if (result == EOF) {
+				fprintf(stderr, "[Warning] El archivo de output no pudo ser cerrado correctamente: %s \n", pathOutput);
+			}
+		}
+
+		return ERROR_WRITE;
+	}
+
+	return RDO_OKEY;
 }
 
 int drawJuliaSet(int resolutionX, int resolutionY, complex center, int width, int height, complex seed, char * pathOutput) {
