@@ -213,6 +213,14 @@ double getPixelRe(complex center, int width, int y, int resolutionX, int resolut
 		return center.realPart;
 	}
 
+	if (resolutionY == 0) {
+		printf("resolutionY ES CEROOOO");
+	}
+
+	if (resolutionX == 0) {
+		printf("resolutionX ES CEROOOO");
+	}
+
 	return (center.realPart - width/2 + y * (width/resolutionY));
 }
 
@@ -221,25 +229,49 @@ double getPixelIm(complex center, int height, int x, int resolutionX, int resolu
 		return center.imaginaryPart;
 	}
 
+	if (resolutionX == 0) {
+		printf("resolutionX ES CEROOOO");
+	}
+
+	if (resolutionY == 0) {
+		printf("resolutionY ES CEROOOO");
+	}
+
 	return (center.imaginaryPart + height/2 - x * (height/resolutionX));
 }
 
-int loadPixelsInFile(int matrixPixeles[][3], char * pathOutput, int sizeX, int sizeY) {
-	int tamBuffer = sizeX * sizeY + sizeY;
+int resolutionInY = 0;
+
+int loadPixelsInFile(int matrixPixeles[][resolutionInY], char * pathOutput, int sizeX, int sizeY) {
+	/*
+	 * P2\n
+	 * <<alto ancho>>\n
+	 * 255\n
+	 * <<Cantidad de elementos en la matriz, por cada fila debe de haber un salto de linea>>
+	 */
+	int tamBuffer = 11 + sizeX * sizeY + sizeY;
 	int buffer[tamBuffer];
 
-	int i = 0;
-	for (int y = 0; y < sizeY; ++y) {
-		for (int x = 0; x < sizeX; ++x) {
+	buffer[0] = 'P';
+	buffer[1] = '2';
+	buffer[2] = '\n';
+	buffer[3] = sizeY;
+	buffer[4] = ' ';
+	buffer[5] = sizeX;
+	buffer[6] = '\n';
+	buffer[7] = '2';
+	buffer[8] = '5';
+	buffer[9] = '\n';
+
+	int i = 10;
+	for (int x = 0; x < sizeX; ++x) {
+		for (int y = 0; y < sizeY; ++y) {
 			buffer[i] = matrixPixeles[x][y];
 			i++;
 		}
 
-		if ((tamBuffer - 1) == i) {
-			buffer[i] = '\0';
-		} else {
-			buffer[i] = '\n';
-		}
+		buffer[i] = '\n';
+		i++;
 	}
 
 	FILE * fileOutput = stdout;
@@ -257,38 +289,56 @@ int loadPixelsInFile(int matrixPixeles[][3], char * pathOutput, int sizeX, int s
 		}
 	}
 
-	int ofd = fileno(fileOutput);
+	fprintf(fileOutput, "P2\n");
+	fprintf(fileOutput, "%i %i\n", sizeY, sizeX);
+	fprintf(fileOutput, "255\n");
 
-	int bytesWrite = write(ofd, buffer, tamBuffer);
-	if (bytesWrite < 0) {
-		fprintf(stderr, "[Error] Hubo un error al escribir en el archivo. \n");
+	for (int i = 0; i < sizeX; i++){
+		for (int j = 0; j < sizeY; j++){
+			fprintf(fileOutput, "%i ", matrixPixeles[i][j]);
+		}
+		fprintf(fileOutput,"\n");
+	}
 
-		if (outputFileDefault == FALSE && fileOutput != NULL) {
-			int result = fclose(fileOutput);
-			if (result == EOF) {
-				fprintf(stderr, "[Warning] El archivo de output no pudo ser cerrado correctamente: %s \n", pathOutput);
+
+	/*int ofd = fileno(fileOutput);
+
+	int completeDelivery = FALSE;
+	int bytesWriteAcum = 0;
+	int bytesToWrite = tamBuffer;
+	while (completeDelivery == FALSE) {
+		int bytesWrite = write(ofd, buffer + bytesWriteAcum, bytesToWrite);
+		if (bytesWrite < 0) {
+			fprintf(stderr, "[Error] Hubo un error al escribir en el archivo. \n");
+
+			if (outputFileDefault == FALSE && fileOutput != NULL) {
+				int result = fclose(fileOutput);
+				if (result == EOF) {
+					fprintf(stderr, "[Warning] El archivo de output no pudo ser cerrado correctamente: %s \n", pathOutput);
+				}
 			}
+
+			return ERROR_WRITE;
 		}
 
-		return ERROR_WRITE;
-	}
+		bytesWriteAcum += bytesWrite;
+		bytesToWrite = tamBuffer - bytesWriteAcum;
+
+		if (bytesToWrite <= 0) {
+			completeDelivery = TRUE;
+		}
+	}*/
 
 	return RDO_OKEY;
 }
 
 int drawJuliaSet(int resolutionX, int resolutionY, complex center, int width, int height, complex seed, char * pathOutput) {
-
+	resolutionInY = resolutionY;
 	int matrixPixeles[resolutionX][resolutionY];
-	// Inicializo la matriz
-	for (int y = 0; y < resolutionY; y++) {
-		for (int x = 0; x < resolutionX; x++) {
-			matrixPixeles[x][y] = 0;
-		}
-	}
 
 	complex pixel;
 	// Me muevo por la matriz para pintar cada pixel
-	for (int y = 0; y < resolutionX; y++) {
+	for (int y = 0; y < resolutionY; y++) {
 		for (int x = 0; x < resolutionX; x++) {
 			/*
 			 * Recorro la zona a pintar de arriba hacia abajo, de izquierda a derecha,
@@ -319,17 +369,39 @@ int drawJuliaSet(int resolutionX, int resolutionY, complex center, int width, in
 		}
 	}
 
+	printf("TERMINO DE CARGAR LA MATRIZ");
+
 	return loadPixelsInFile(matrixPixeles, pathOutput, resolutionX, resolutionY);
 }
 
 int main(int argc, char *argv[]) {
+	int resolutionX = 640;
+	int resolutionY = 480;
+	complex center;
+	center.realPart = 0;
+	center.imaginaryPart = 0;
+	int width = 2;
+	int height = 2;
+	complex seed;
+	seed.realPart = -0.726895347709114071439;
+	seed.imaginaryPart = 0.188887129043845954792;
+
+	char * pathOutput = malloc(7);
+	pathOutput = "uno.pgm";
+
+	int rdo = drawJuliaSet(resolutionX, resolutionY, center, width, height, seed, pathOutput);
+
+	printf("\n termino");
+
+	return rdo;
+
 	/*
 	 * Si la cantidad de parámetros ingresados es incorrecta salimos.
 	 */
-	if (argc > MAX_PARAM) {
+	/*if (argc > MAX_PARAM) {
 		fprintf(stderr, "[Error] Cantidad máxima de parámetros incorrecta: %d \n", argc);
 		return INCORRECT_QUANTITY_PARAMS;
 	}
 
-	return execute(argc, argv);
+	return execute(argc, argv);*/
 }
