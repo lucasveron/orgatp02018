@@ -304,8 +304,8 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 		return ERROR_FORMAT;
 	}
 
-	char forCharacter = 'x';
-	if(tolower(params->resolution[0]) == forCharacter || tolower(params->resolution[strlen(params->resolution)-1]) == forCharacter) {
+	int characterX = 120; // x = 120
+	if(tolower(params->resolution[0]) == characterX || tolower(params->resolution[strlen(params->resolution)-1]) == characterX) {
 		return ERROR_FORMAT;
 	}
 
@@ -318,7 +318,7 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 	int i;
 	for (i = 0; i < strlen(params->resolution); i++) {
 		caracter = params->resolution[i];
-		if (tolower(caracter) == forCharacter) {
+		if (tolower(caracter) == characterX) {
 			if (findX == TRUE) {
 				moreX = TRUE;
 			} else {
