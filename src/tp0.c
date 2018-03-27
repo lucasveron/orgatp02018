@@ -55,18 +55,16 @@ typedef struct params {
 } params;
 
 
-char* substr(char* cadena, int comienzo, int longitud=0){
-    /*
-     * if (longitud == 0)
-        longitud = strlen(cadena)-comienzo;
-
-    char *nuevo = (char*)malloc(sizeof(char) * (longitud+1));
-    nuevo[longitud] = '\0';
-    strncpy(nuevo, cadena + comienzo, longitud);
-
-    return nuevo;
-     */
-}
+//char* substr(char* cadena, int comienzo, int longitud = 0){
+//	if (longitud == 0)
+//		longitud = strlen(cadena) - comienzo;
+//
+//	char *nuevo = (char*) malloc(sizeof(char) * (longitud + 1));
+//	nuevo[longitud] = '\0';
+//	strncpy(nuevo, cadena + comienzo, longitud);
+//
+//	return nuevo;
+//}
 
 int getResY(params *p){
 	char * source = p->res;
@@ -91,6 +89,7 @@ char* getResX(params *p){
 	}
 	 */
 }
+
 /*
  * Muestra la version de la aplicación.
  */
@@ -254,7 +253,7 @@ void retrieveParams(int argc, char *argv[], params *p) {
 	setDefaultParams(p);
 }
 
-void executeFractal(params *p){
+int executeFractal(params *p){
 	return drawJuliaSet(getResX(p), getResY(p), p->center, p->w, p->h, p->seed, p->out);
 }
 
@@ -268,7 +267,7 @@ int checkParams(params *p){
 }
 
 params initParams(){
-	params p = {
+	params params = {
 				.incorrectOpt = FALSE,
 				.showversion = FALSE,
 				.showhelp = FALSE,
@@ -281,28 +280,13 @@ params initParams(){
 				.center = NULL,
 				.seed = NULL
 		};
-	return p;
+	return params;
 }
 
 int execute(int argc, char *argv[]) {
 	/*
-	 * Si existe sólo 1 parámetro(output(-o)
-	 * ejecuto el fractal con los parámetros por defecto.
-	 */
-
-	/*
-	 * if (argc == 1) {
-		// Ejecuto fractal por defecto.
-		return executeFractalDefault();
-	}
-	 */
-
-
-	params p;
-	/*
 	 * Inicializamos los params.
 	 */
-	//init(&p);
 	 params p = initParams();
 	/*
 	 * Obtenemos los parámetros ingresados.
@@ -391,8 +375,10 @@ int loadPixelsInFile(int matrixPixeles[][resolutionInY], char * pathOutput, int 
 	buffer[9] = '\n';
 
 	int i = 10;
-	for (int x = 0; x < sizeX; ++x) {
-		for (int y = 0; y < sizeY; ++y) {
+	int x;
+	for (x = 0; x < sizeX; ++x) {
+		int y;
+		for (y = 0; y < sizeY; ++y) {
 			buffer[i] = matrixPixeles[x][y];
 			i++;
 		}
@@ -419,10 +405,11 @@ int loadPixelsInFile(int matrixPixeles[][resolutionInY], char * pathOutput, int 
 	fprintf(fileOutput, "P2\n");
 	fprintf(fileOutput, "%i %i\n", sizeY, sizeX);
 	fprintf(fileOutput, "255\n");
-
-	for (int i = 0; i < sizeX; i++){
-		for (int j = 0; j < sizeY; j++){
-			fprintf(fileOutput, "%i ", matrixPixeles[i][j]);
+	int k;
+	for (k = 0; k < sizeX; k++){
+		int j;
+		for (j = 0; j < sizeY; j++){
+			fprintf(fileOutput, "%k ", matrixPixeles[k][j]);
 		}
 		fprintf(fileOutput,"\n");
 	}
@@ -464,9 +451,11 @@ int drawJuliaSet(int resolutionX, int resolutionY, complex center, int width, in
 	int matrixPixeles[resolutionX][resolutionY];
 
 	complex pixel;
+	int y;
 	// Me muevo por la matriz para pintar cada pixel
-	for (int y = 0; y < resolutionY; y++) {
-		for (int x = 0; x < resolutionX; x++) {
+	for (y = 0; y < resolutionY; y++) {
+		int x;
+		for (x = 0; x < resolutionX; x++) {
 			/*
 			 * Recorro la zona a pintar de arriba hacia abajo, de izquierda a derecha,
 			 * por lo que comienzo a pintar en la esquina superior izquierda.
