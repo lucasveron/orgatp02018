@@ -19,7 +19,8 @@
 #define TRUE 0
 #define FALSE 1
 
-#define MAX_PARAM 6
+#define MAX_ARGS 6
+#define MIN_ARGS 2
 
 #define MAXIMUM_ITERATION  50
 
@@ -31,24 +32,71 @@ enum ResultState {
 	RDO_OKEY = 0, ERROR_WRITE = -1
 };
 
+typedef struct number {
+	double realPart;
+	double imaginaryPart;
+
+} complex;
+
 typedef struct params {
 	int incorrectOpt;
 	int showversion;
 	int showhelp;
+	int sout;
 	char * res;
-	char * center;
+	char * c;
 	char * w;
 	char * h;
 	char * seed;
 	char * out;
+	complex * pos;
+	complex * center;
+	complex * cseed;
 } params;
 
+
+char* substr(char* cadena, int comienzo, int longitud=0){
+    /*
+     * if (longitud == 0)
+        longitud = strlen(cadena)-comienzo;
+
+    char *nuevo = (char*)malloc(sizeof(char) * (longitud+1));
+    nuevo[longitud] = '\0';
+    strncpy(nuevo, cadena + comienzo, longitud);
+
+    return nuevo;
+     */
+}
+
+int getResY(params *p){
+	char * source = p->res;
+	char * pos = strstr( source, "x" );
+	int posi = pos - source;
+	char * cy = substr(source,pos,strlen(source));
+	return (int)cy;
+}
+
+char* getResX(params *p){
+	char * source = p->res;
+	char * pos = strstr( source, "x" );
+	int posi = pos - source;
+	char * cx = substr(source,0,posi);
+	return cx;
+	/*
+	 * char * pos = strstr( source, "x" );
+	int pos = pos ? pos - source : -1;
+	if(pos != -1){
+		memcpy( source, &source[10], 4 );
+		subbuff[4] = '\0';
+	}
+	 */
+}
 /*
  * Muestra la version de la aplicación.
  */
 int executeVersion(params *p) {
-	if(p->showversion){
-		fprintf(stdout, "Version: \"%s\" \n", VERSION);
+	if(p->showversion == TRUE){
+		fprintf(stderr, "Version: \"%s\" \n", VERSION);
 	}
 	return OKEY;
 }
@@ -57,7 +105,7 @@ int executeVersion(params *p) {
  * Menú de ayuda
  */
 int executeHelp(params *p) {
-	if(p->showhelp){
+	if(p->showhelp == TRUE){
 		fprintf(stdout, "Uso: \n");
 		fprintf(stdout, "	tp0 -h \n");
 		fprintf(stdout, "	tp0 -V \n");
@@ -76,13 +124,59 @@ int executeHelp(params *p) {
 	}
 	return OKEY;
 }
+
 /*
  * Setea los parámetros por defecto en caso de ser necesario.
  */
 void setDefaultParams(params *p){
-	fprintf(stderr, "setDefaultParams...");
-}
+	//fprintf(stderr, "setting default params...");
+	/*
+	 * Seteamos la parte real e imaginaria en (0,0).
+	 */
+	if(p->pos == NULL){
 
+		complex *z = malloc(sizeof(complex));
+		double i = 0.0; // pure imaginary
+		double r = 0.0; // pure real
+		z->realPart = r;
+		z->imaginaryPart = i;
+		p->pos = z;
+	}
+	/*
+	 * Seteo la resolución por defecto = 640x480
+	 */
+	if(strlen(p->res) == 0){
+		p->res = "640x480";
+	}
+	/*
+	 * Seteo la el ancho y el alto del rectangulo.
+	 */
+	if(p->w == 0){
+		p->w = 2;
+	}
+	if(p->h == 0){
+		p->h = 2;
+	}
+	/*
+	 * Seteo el valor de la semilla por defecto.
+	 */
+	if(p->seed == NULL){
+		double r = -0.726895347709114071439; // pure imaginary
+		double i =  0.188887129043845954792; // pure real
+		complex *z1;
+		z1->realPart = r;
+		z1->imaginaryPart = i;
+		p->pos = z1;
+	}
+}
+complex* getcenter(char * center,params *p){
+	complex *z = malloc(sizeof(complex));
+	double i = 0.0; // pure imaginary
+	double r = 0.0; // pure real
+	z->realPart = r;
+	z->imaginaryPart = i;
+	p->pos = z;
+}
 void retrieveParams(int argc, char *argv[], params *p) {
 
 	/* Una estructura de varios arrays describiendo
@@ -107,7 +201,7 @@ void retrieveParams(int argc, char *argv[], params *p) {
 	char opt = 0;
 
 	/* Una cadena que lista las opciones cortas validas */
-		const char* const smallOptions = "Vhi:o:I:O:";
+	const char* const smallOptions = "Vhr:c:w:H:s:o:";
 
 	/*
 	 * Switch para obtener los parámetros de entrada.
@@ -128,7 +222,7 @@ void retrieveParams(int argc, char *argv[], params *p) {
 			p->res = optarg;
 			break;
 		case 'c':
-			p->center = optarg;
+			p->center = getcenter(optarg,&p);
 			break;
 		case 'w':
 			p->w = optarg;
@@ -144,10 +238,16 @@ void retrieveParams(int argc, char *argv[], params *p) {
 			break;
 		default:
 			p->incorrectOpt = incorrectOption = TRUE;
-			//incorrectOption = TRUE;
 		}
 	}
 
+	/*
+	 * Si no existe parámetro de output seteamos incorrectOpt
+	 */
+	if(p->out == NULL){
+		p->incorrectOpt = TRUE;
+		return;
+	}
 	/*
 	 * Seteamos los parámetros faltantes si corresponden.
 	 */
@@ -155,7 +255,33 @@ void retrieveParams(int argc, char *argv[], params *p) {
 }
 
 void executeFractal(params *p){
-	fprintf(stderr, "Ejecutando fractal...");
+	return drawJuliaSet(getResX(p), getResY(p), p->center, p->w, p->h, p->seed, p->out);
+}
+
+int checkParams(params *p){
+	//fprintf(stdout, "params: %s",p->incorrectOpt);
+	if (p->incorrectOpt == TRUE) {
+		fprintf(stdout, "[Error] Incorrecta option de menu.\n");
+		return INCORRECT_MENU;
+	}
+	return OKEY;
+}
+
+params initParams(){
+	params p = {
+				.incorrectOpt = FALSE,
+				.showversion = FALSE,
+				.showhelp = FALSE,
+				.sout = FALSE,
+				.res = "640x480",
+				.w = 0,
+				.h = 0,
+				.out = "",
+				.pos = NULL,
+				.center = NULL,
+				.seed = NULL
+		};
+	return p;
 }
 
 int execute(int argc, char *argv[]) {
@@ -174,16 +300,23 @@ int execute(int argc, char *argv[]) {
 
 	params p;
 	/*
-	 * Obtenemos los parámetros ingresados
+	 * Inicializamos los params.
+	 */
+	//init(&p);
+	 params p = initParams();
+	/*
+	 * Obtenemos los parámetros ingresados.
 	 */
 	retrieveParams(argc,argv,&p);
 
 	/*
 	 * Chequeo de errores en la obtención de parámetros.
+	 * Si el resultado no es OKEY(0) termino la ejecución.
 	 */
-	if (p.incorrectOpt) {
-			fprintf(stderr, "[Error] Incorrecta option de menu.\n");
-			return INCORRECT_MENU;
+
+	int result = checkParams(&p);
+	if(result != TRUE){
+		return result;
 	}
 
 	/*
@@ -199,14 +332,8 @@ int execute(int argc, char *argv[]) {
 	 */
 	executeFractal(&p);
 
-	return 0;
+	return OKEY;
 }
-
-typedef struct number {
-	double realPart;
-	double imaginaryPart;
-
-} complex;
 
 double getPixelRe(complex center, int width, int y, int resolutionX, int resolutionY) {
 	if (resolutionX == 1 && resolutionY == 1) {
@@ -398,10 +525,10 @@ int main(int argc, char *argv[]) {
 	/*
 	 * Si la cantidad de parámetros ingresados es incorrecta salimos.
 	 */
-	/*if (argc > MAX_PARAM) {
-		fprintf(stderr, "[Error] Cantidad máxima de parámetros incorrecta: %d \n", argc);
+	if (argc > MAX_ARGS || argc < MIN_ARGS) {
+		fprintf(stderr, "[Error] Cantidad de parámetros incorrecta: %d \n", argc);
 		return INCORRECT_QUANTITY_PARAMS;
 	}
 
-	return execute(argc, argv);*/
+	return execute(argc, argv);
 }
