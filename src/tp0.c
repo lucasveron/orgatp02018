@@ -305,14 +305,16 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 	}
 
 	int characterX = 120; // x = 120
-	if(tolower(params->resolution[0]) == characterX || tolower(params->resolution[strlen(params->resolution)-1]) == characterX) {
+	int p0 = params->resolution[0];
+	int pN = params->resolution[strlen(params->resolution)-1];
+	if(tolower(p0) == characterX || tolower(pN) == characterX) {
 		return ERROR_FORMAT;
 	}
 
 	int positionX = 0;
 	int findX = FALSE;
 	int caracterNotNumber = FALSE;
-	char caracter = '\0';
+	int caracter = '\0';
 	int caracterInt = -1;
 	int moreX = FALSE;
 	int i;
