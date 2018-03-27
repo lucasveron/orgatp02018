@@ -234,8 +234,10 @@ int loadPixelsInFile(int matrixPixeles[][resolutionInY], char * pathOutput, int 
 	fprintf(fileOutput, "%i %i\n", sizeY, sizeX);
 	fprintf(fileOutput, "255\n");
 
-	for (int i = 0; i < sizeX; i++){
-		for (int j = 0; j < sizeY; j++){
+	int i;
+	for (i = 0; i < sizeX; i++){
+		int j;
+		for (j = 0; j < sizeY; j++){
 			fprintf(fileOutput, "%i ", matrixPixeles[i][j]);
 		}
 		fprintf(fileOutput,"\n");
@@ -261,8 +263,10 @@ int drawJuliaSet(paramsDraw * paramsDraw) {
 	int matrixPixeles[paramsDraw->resolutionX][paramsDraw->resolutionY];
 
 	complex pixel;
-	for (int y = 0; y < paramsDraw->resolutionY; y++) {
-		for (int x = 0; x < paramsDraw->resolutionX; x++) {
+	int y;
+	for (y = 0; y < paramsDraw->resolutionY; y++) {
+		int x;
+		for (x = 0; x < paramsDraw->resolutionX; x++) {
             /*
              * Recorro la zona a pintar de arriba hacia abajo, de izquierda a derecha,
              * por lo que comienzo a pintar en la esquina superior izquierda.
@@ -300,7 +304,8 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 		return ERROR_FORMAT;
 	}
 
-	if(tolower(params->resolution[0])=='x' || tolower(params->resolution[strlen(params->resolution)-1])=='x') {
+	char forCharacter = 'x';
+	if(tolower(params->resolution[0]) == forCharacter || tolower(params->resolution[strlen(params->resolution)-1]) == forCharacter) {
 		return ERROR_FORMAT;
 	}
 
@@ -310,9 +315,10 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 	char caracter = '\0';
 	int caracterInt = -1;
 	int moreX = FALSE;
-	for (int i = 0; i < strlen(params->resolution); i++) {
+	int i;
+	for (i = 0; i < strlen(params->resolution); i++) {
 		caracter = params->resolution[i];
-		if (tolower(caracter) == 'x') {
+		if (tolower(caracter) == forCharacter) {
 			if (findX == TRUE) {
 				moreX = TRUE;
 			} else {
@@ -339,7 +345,7 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 
 	int length = positionX + 1;
 	char resolutionX [length];
-	for (int i = 0; i < positionX; ++ i) {
+	for (i = 0; i < positionX; ++ i) {
 		resolutionX[i] = params->resolution[i];
 	}
 	resolutionX[positionX] = '\0';
@@ -354,7 +360,7 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 	length = strlen(params->resolution);
 	length -= positionX;
 	char resolutionY[length];
-	for (int i = 0; i < (length- 1); ++ i) {
+	for (i = 0; i < (length- 1); ++ i) {
 		positionX++;
 		resolutionY[i] = params->resolution[positionX];
 	}
@@ -427,7 +433,8 @@ int getValidComplex(params * params, paramsDraw * paramsDraw, int loadCenter, in
 	int findI = FALSE;
 	int moreI = FALSE;
 	char caracter = '\0';
-	for (int i = 1; i < (strlen(complex) - 1); i++) {
+	int i;
+	for (i = 1; i < (strlen(complex) - 1); i++) {
 		caracter = complex[i];
 		if (caracter == '+' || caracter == '-') {
 			if (findSign == TRUE) {
@@ -461,7 +468,7 @@ int getValidComplex(params * params, paramsDraw * paramsDraw, int loadCenter, in
 	int quantityPoint = 0;
 	int caracterInt = 0;
 	int isNegative = FALSE;
-	for (int i = 0; i < posSign; ++ i) {
+	for (i = 0; i < posSign; ++ i) {
 		caracterInt = complex[i];
 		/*
 		 * 0 = 48
@@ -513,7 +520,7 @@ int getValidComplex(params * params, paramsDraw * paramsDraw, int loadCenter, in
 	quantityPoint = 0;
 	caracterInt = 0;
 	int posInComplex = posSign + 1;
-	for (int i = 0; i < (length - 1); ++ i) {
+	for (i = 0; i < (length - 1); ++ i) {
 		caracterInt = complex[posInComplex];
 		/*
 		 * 0 = 48
@@ -574,7 +581,8 @@ int getValidWidth(params * params, paramsDraw * paramsDraw) {
 	int isNumber = TRUE;
 	int caracterInt;
 	int quantityPoint = 0;
-	for (int i = 1; i < strlen(params->width); i++) {
+	int i;
+	for (i = 1; i < strlen(params->width); i++) {
 		caracterInt = params->width[i];
 		/*
 		 * 0 = 48
@@ -613,7 +621,8 @@ int getValidHeight(params * params, paramsDraw * paramsDraw) {
 	int isNumber = TRUE;
 	int caracterInt;
 	int quantityPoint = 0;
-	for (int i = 1; i < strlen(params->height); i++) {
+	int i;
+	for (i = 1; i < strlen(params->height); i++) {
 		caracterInt = params->width[i];
 		/*
 		 * 0 = 48
