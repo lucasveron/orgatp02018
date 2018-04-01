@@ -20,10 +20,14 @@
 #define TRUE 0
 #define FALSE 1
 
-#define MAX_ARGS 6
-#define MIN_ARGS 2
+#define MAX_ARGS	13
+#define MIN_ARGS	3
 
 #define MAXIMUM_ITERATION  255
+
+#define MAX_NAME_FILE_OUTPUT	10
+#define MAX_RESOLUCION_X		700
+#define MAX_RESOLUCION_Y		700
 
 enum ParameterState {
 	 OKEY = 0, INCORRECT_QUANTITY_PARAMS = 1, INCORRECT_MENU = 2, ERROR_FILE = 3, ERROR_MEMORY = 4, ERROR_PARAM = 5, ERROR_FORMAT = 6
@@ -49,8 +53,6 @@ typedef struct params {
 } params;
 
 typedef struct actions {
-	int version;
-	int help;
 	int draw;
 	int incorrectOption;
 } actions;
@@ -91,24 +93,20 @@ params initParams(){
 
 actions retrieveParams(int argc, char *argv[], params *p) {
 	actions action;
-	action.help = FALSE;
 	action.draw = FALSE;
-	action.version = FALSE;
 	action.incorrectOption = FALSE;
 
 	/* Una estructura de varios arrays describiendo
 	 * los valores largos
 	 */
 	const struct option longOptions[] = {
-			{"version",		no_argument, 		0,  'V' },
-			{"help",		no_argument,       	0,  'h' },
 			{"resolution",	required_argument,  0,	'r' }, // optional_argument
 			{"center",		required_argument,  0,	'c' },
-			{"width",	required_argument, 	0,  'w' },
-			{"height",	required_argument, 	0,  'H' },
-			{"seed",	required_argument, 	0,  's' },
-			{"output",	required_argument, 	0,  'o' },
-			{0,			0,                 	0,   0  }
+			{"width",		required_argument, 	0,  'w' },
+			{"height",		required_argument, 	0,  'H' },
+			{"seed",		required_argument, 	0,  's' },
+			{"output",		required_argument, 	0,  'o' },
+			{0,				0,                 	0,   0  }
 	};
 
 	int finish = FALSE;
@@ -116,7 +114,7 @@ actions retrieveParams(int argc, char *argv[], params *p) {
 	char opt = 0;
 
 	/* Una cadena que lista las opciones cortas validas */
-	const char* const smallOptions = "Vhr:c:w:H:s:o:";
+	const char* const smallOptions = "r:c:w:H:s:o:";
 
 	/*
 	 * Switch para obtener los parámetros de entrada.
@@ -125,76 +123,36 @@ actions retrieveParams(int argc, char *argv[], params *p) {
 			= getopt_long(argc, argv, smallOptions, longOptions, &longIndex))
 			!= -1 && action.incorrectOption == FALSE && finish == FALSE) {
 		switch (opt) {
-		case 'V' :
-			action.version = TRUE;
-			finish = TRUE;
-			break;
-		case 'h' :
-			action.help = TRUE;
-			finish = TRUE;
-			break;
-		case 'r':
-			action.draw = TRUE;
-			p->resolution = optarg;
-			break;
-		case 'c':
-			action.draw = TRUE;
-			p->center = optarg;
-			break;
-		case 'w':
-			action.draw = TRUE;
-			p->width = optarg;
-			break;
-		case 'H':
-			action.draw = TRUE;
-			p->height = optarg;
-			break;
-		case 's':
-			action.draw = TRUE;
-			p->seed = optarg;
-			break;
-		case 'o':
-			action.draw = TRUE;
-			p->output = optarg;
-			break;
-		default:
-			action.incorrectOption = TRUE;
+			case 'r':
+				action.draw = TRUE;
+				p->resolution = optarg;
+				break;
+			case 'c':
+				action.draw = TRUE;
+				p->center = optarg;
+				break;
+			case 'w':
+				action.draw = TRUE;
+				p->width = optarg;
+				break;
+			case 'H':
+				action.draw = TRUE;
+				p->height = optarg;
+				break;
+			case 's':
+				action.draw = TRUE;
+				p->seed = optarg;
+				break;
+			case 'o':
+				action.draw = TRUE;
+				p->output = optarg;
+				break;
+			default:
+				action.incorrectOption = TRUE;
 		}
 	}
 
 	return action;
-}
-
-/*
- * Muestra la version de la aplicación.
- */
-int executeVersion() {
-	fprintf(stderr, "Version: \"%s\" \n", VERSION);
-
-	return OKEY;
-}
-
-/*
- * Menú de ayuda
- */
-int executeHelp() {
-	fprintf(stdout, "Uso: \n");
-	fprintf(stdout, "	tp0 -h \n");
-	fprintf(stdout, "	tp0 -V \n");
-	fprintf(stdout, "	tp0 [opciones] \n");
-	fprintf(stdout, "Options: \n");
-	fprintf(stdout, "	-V, --version		Muestra la version. \n");
-	fprintf(stdout, "	-h, --help	    	Muestra esta información. \n");
-	fprintf(stdout, "	-r, --resolution	Permite cambiar la resolucion de la imagen generada.El valor por defecto es 640x480 puntos. \n");
-	fprintf(stdout, "	-c, --center		Especifica las coordenadas correspondientes al punto central de la porción del plano complejo dibujada, en forma binómica. \n");
-	fprintf(stdout, "	-w, --width			Especifica el ancho de la región del plano complejo por dibujar. Valor por defecto: 2 \n");
-	fprintf(stdout, "	-H, --height		Especifica el alto de la región del plano complejo por dibujar. Valor por defecto: 2 \n");
-	fprintf(stdout, "	-s, --seed			Para configurar el valor complejo de la semilla.\n");
-	fprintf(stdout, "	-o, --output		Permite colocar la imagen de salida ó salida estándar si el argumento es - . \n");
-	fprintf(stdout, "Ejemplo: \n");
-	fprintf(stdout, "	tp0 -o uno.pgm \n");
-
-	return OKEY;
 }
 
 double getPixelRe(complex center, double width, int y, int resolutionX, int resolutionY) {
@@ -215,6 +173,15 @@ double getPixelIm(complex center, double height, int x, int resolutionX, int res
 
 int resolutionInY = 0;
 
+void closeFile(FILE * fileOutput, int outputFileDefault, char * pathOutput) {
+	if (outputFileDefault == FALSE && fileOutput != NULL) {
+		int result = fclose(fileOutput);
+		if (result == EOF) {
+			fprintf(stderr, "[Warning] El archivo de output no pudo ser cerrado correctamente: %s \n", pathOutput);
+		}
+	}
+}
+
 int loadPixelsInFile(int matrixPixeles[][resolutionInY], char * pathOutput, int sizeX, int sizeY) {
 	FILE * fileOutput = stdout;
 	int outputFileDefault = FALSE;
@@ -230,22 +197,34 @@ int loadPixelsInFile(int matrixPixeles[][resolutionInY], char * pathOutput, int 
 		}
 	}
 
-	fprintf(fileOutput, "P2\n");
-	fprintf(fileOutput, "%i %i\n", sizeY, sizeX);
-	fprintf(fileOutput, "255\n");
+	// fprintf:If successful, the total number of characters written is returned otherwise, a negative number is returned.
+	int rdoWrite = fprintf(fileOutput, "P2\n%i %i\n255\n", sizeY, sizeX);
+	if (rdoWrite <= 0) {
+		closeFile(fileOutput, outputFileDefault, pathOutput);
+
+		return ERROR_WRITE;
+	}
 
 	int i;
 	for (i = 0; i < sizeX; i++){
 		int j;
 		for (j = 0; j < sizeY; j++){
-			fprintf(fileOutput, "%i ", matrixPixeles[i][j]);
+			rdoWrite = fprintf(fileOutput, "%i ", matrixPixeles[i][j]);
+			if (rdoWrite <= 0) {
+				closeFile(fileOutput, outputFileDefault, pathOutput);
+
+				return ERROR_WRITE;
+			}
 		}
-		fprintf(fileOutput,"\n");
+		rdoWrite = fprintf(fileOutput,"\n");
+		if (rdoWrite <= 0) {
+			closeFile(fileOutput, outputFileDefault, pathOutput);
+
+			return ERROR_WRITE;
+		}
 	}
 
-	if (outputFileDefault == FALSE) {
-		fclose(fileOutput);
-	}
+	closeFile(fileOutput, outputFileDefault, pathOutput);
 
 	return RDO_OKEY;
 }
@@ -352,8 +331,8 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 	}
 	resolutionX[positionX] = '\0';
 
-	paramsDraw->resolutionX =  atoi(resolutionX);
-	if (paramsDraw->resolutionX <= 0) {
+	paramsDraw->resolutionY =  atoi(resolutionX);
+	if (paramsDraw->resolutionY <= 0) {
 		fprintf(stderr, "[Error] Los valores de la resolucion deben de ser mayores a cero.\n");
 
 		return ERROR_FORMAT;
@@ -368,8 +347,8 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 	}
 	resolutionY[length - 1] = '\0';
 
-	paramsDraw->resolutionY =  atoi(resolutionY);
-	if (paramsDraw->resolutionY <= 0) {
+	paramsDraw->resolutionX =  atoi(resolutionY);
+	if (paramsDraw->resolutionX <= 0) {
 		fprintf(stderr, "[Error] Los valores de la resolucion deben de ser mayores a cero.\n");
 
 		return ERROR_FORMAT;
@@ -620,6 +599,7 @@ int getValidHeight(params * params, paramsDraw * paramsDraw) {
 
 		return ERROR_FORMAT;
 	}
+
 	int isNumber = TRUE;
 	int caracterInt;
 	int quantityPoint = 0;
@@ -654,6 +634,98 @@ int getValidHeight(params * params, paramsDraw * paramsDraw) {
 	return OKEY;
 }
 
+int getValidPathOutput(params * params, paramsDraw * paramsDraw) {
+	if (params->output == NULL) {
+		fprintf(stderr, "[Error] Debe de especificar archivo de salida en los parametros (salida estandar: -).\n");
+
+		return ERROR_FORMAT;
+	}
+
+	if (params->output == NULL || strcmp("-",params->output) == 0) {
+		paramsDraw->pathOutput = params->output;
+
+		return OKEY;
+	}
+
+	int isCaracterOkey = TRUE;
+	int positionPoint = -1;
+	int quantityPoint = 0;
+	int caracterInt;
+	int i;
+	for (i = 0; i < strlen(params->output); i++) {
+		caracterInt = params->output[i];
+		/*
+		 * 0 = 48
+		 * 9 = 57
+		 *
+		 * A = 65
+		 * Z = 90
+		 *
+		 * a = 97
+		 * z = 122
+		 *
+		 * . = 46
+		 */
+		if (caracterInt == 46) {
+			quantityPoint++;
+			positionPoint = i;
+		} else if (!( (caracterInt >= 48 && caracterInt <= 57) || (caracterInt >= 65 && caracterInt <= 90) || (caracterInt >= 97 && caracterInt <= 122) )) {
+			isCaracterOkey = FALSE;
+		}
+	}
+
+	if (isCaracterOkey == FALSE || quantityPoint != 1 || positionPoint == 0) {
+		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+
+		return ERROR_FORMAT;
+	}
+
+	// MAX_NAME_FILE_OUTPUT
+	if (positionPoint > MAX_NAME_FILE_OUTPUT) {
+		fprintf(stderr, "[Error] El archivo de salida debe contener como máximo %i caracteres.\n", MAX_NAME_FILE_OUTPUT);
+
+		return ERROR_FORMAT;
+	}
+
+	int quantityCaracterExtension = strlen(params->output) - positionPoint; // 6 - 2 = 4
+	if (quantityCaracterExtension != 4) {
+		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+
+		return ERROR_FORMAT;
+	}
+
+	if (params->output[positionPoint] != '.') {
+		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+
+		return ERROR_FORMAT;
+	}
+	positionPoint++;
+
+	if (params->output[positionPoint] != 'p') {
+		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+
+		return ERROR_FORMAT;
+	}
+	positionPoint++;
+
+	if (params->output[positionPoint] != 'g') {
+		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+
+		return ERROR_FORMAT;
+	}
+	positionPoint++;
+
+	if (params->output[positionPoint] != 'm') {
+		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+
+		return ERROR_FORMAT;
+	}
+
+	paramsDraw->pathOutput = params->output;
+
+	return OKEY;
+}
+
 /*
  * Dibujar el conjunto de Julia y sus vecindades.
  */
@@ -664,8 +736,6 @@ int executeFractal(params * params){
 	if (rdoValidation != OKEY) {
 		return rdoValidation;
 	}
-
-	//int getValidComplex(params * params, paramsDraw * paramsDraw, int loadCenter, int loadSeed)
 
 	// Center
 	rdoValidation = getValidComplex(params, &paramsDraw, TRUE, FALSE);
@@ -692,7 +762,10 @@ int executeFractal(params * params){
 	}
 
 	// file
-	paramsDraw.pathOutput = params->output;
+	rdoValidation = getValidPathOutput(params, &paramsDraw);
+	if (rdoValidation != OKEY) {
+		return rdoValidation;
+	}
 
 	return drawJuliaSet(&paramsDraw);
 }
@@ -723,20 +796,6 @@ int execute(int argc, char *argv[]) {
 		return ERROR_PARAM;
 	}
 
-	/*
-	 * Mostramos la version si corresponde.
-	 */
-	if (action.version == TRUE) {
-		return executeVersion();
-	}
-
-	/*
-	 * Mostramos el menú de ayuda si corresponde.
-	 */
-	if (action.help == TRUE) {
-		return executeHelp();
-	}
-
 
 	/*
 	 * Ejecutamos el fractal con los parámetros ingresados.
@@ -749,6 +808,9 @@ int execute(int argc, char *argv[]) {
 }
 
 int main(int argc, char *argv[]) {
+	// / -o -  => 3 parameters as minimum
+	// / -r 640x500 -c 0.145-89.2i -w 0.05 -h 2 -s -0.256+145i -o one.pgm  => 13 parameters as maximum
+
 	/*
 	 * Si la cantidad de parámetros ingresados es incorrecta salimos.
 	 */
