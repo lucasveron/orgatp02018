@@ -21,13 +21,15 @@
 #define FALSE 1
 
 #define MAX_ARGS	13
-#define MIN_ARGS	3
+#define MIN_ARGS	2
 
 #define MAXIMUM_ITERATION  255
 
 #define MAX_NAME_FILE_OUTPUT	10
-#define MAX_RESOLUCION_X		700
-#define MAX_RESOLUCION_Y		700
+#define MAX_RESOLUTION_X		700
+#define MAX_RESOLUTION_Y		700
+#define MAX_SEED_REAL			100
+#define MAX_SEED_IMAGINARY		100
 
 enum ParameterState {
 	 OKEY = 0, INCORRECT_QUANTITY_PARAMS = 1, INCORRECT_MENU = 2, ERROR_FILE = 3, ERROR_MEMORY = 4, ERROR_PARAM = 5, ERROR_FORMAT = 6
@@ -51,12 +53,6 @@ typedef struct params {
 	char * seed;
 	char * output;
 } params;
-
-typedef struct actions {
-	int draw;
-	int incorrectOption;
-} actions;
-
 
 typedef struct paramsDraw {
 	int resolutionX;
@@ -91,10 +87,8 @@ params initParams(){
 	return params;
 }
 
-actions retrieveParams(int argc, char *argv[], params *p) {
-	actions action;
-	action.draw = FALSE;
-	action.incorrectOption = FALSE;
+int retrieveParams(int argc, char *argv[], params *p) {
+	int incorrectOption = FALSE;
 
 	/* Una estructura de varios arrays describiendo
 	 * los valores largos
@@ -109,7 +103,6 @@ actions retrieveParams(int argc, char *argv[], params *p) {
 			{0,				0,                 	0,   0  }
 	};
 
-	int finish = FALSE;
 	int longIndex = 0;
 	char opt = 0;
 
@@ -121,38 +114,36 @@ actions retrieveParams(int argc, char *argv[], params *p) {
 	 */
 	while ((opt
 			= getopt_long(argc, argv, smallOptions, longOptions, &longIndex))
-			!= -1 && action.incorrectOption == FALSE && finish == FALSE) {
+			!= -1 && incorrectOption == FALSE) {
 		switch (opt) {
 			case 'r':
-				action.draw = TRUE;
 				p->resolution = optarg;
 				break;
 			case 'c':
-				action.draw = TRUE;
 				p->center = optarg;
 				break;
 			case 'w':
-				action.draw = TRUE;
 				p->width = optarg;
 				break;
 			case 'H':
-				action.draw = TRUE;
 				p->height = optarg;
 				break;
 			case 's':
-				action.draw = TRUE;
 				p->seed = optarg;
 				break;
 			case 'o':
-				action.draw = TRUE;
 				p->output = optarg;
 				break;
 			default:
-				action.incorrectOption = TRUE;
+				incorrectOption = TRUE;
 		}
 	}
 
-	return action;
+	if (incorrectOption == TRUE) {
+		return ERROR_PARAM;
+	}
+
+	return OKEY;
 }
 
 double getPixelRe(complex center, double width, int y, int resolutionX, int resolutionY) {
@@ -293,13 +284,12 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 	int positionX = 0;
 	int findX = FALSE;
 	int caracterNotNumber = FALSE;
-	int caracter = '\0';
 	int caracterInt = -1;
 	int moreX = FALSE;
 	int i;
 	for (i = 0; i < strlen(params->resolution); i++) {
-		caracter = params->resolution[i];
-		if (tolower(caracter) == characterX) {
+		caracterInt = params->resolution[i];
+		if (tolower(caracterInt) == characterX) {
 			if (findX == TRUE) {
 				moreX = TRUE;
 			} else {
@@ -307,12 +297,11 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 				findX = TRUE;
 			}
 		} else {
-			caracterInt = caracter;
 			/*
 			 * 0 = 48
 			 * 9 = 57
 			 */
-			if (caracterInt < 48 && caracterInt > 57) {
+			if (caracterInt < 48 || caracterInt > 57) {
 				caracterNotNumber = TRUE;
 			}
 		}
@@ -338,6 +327,12 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 		return ERROR_FORMAT;
 	}
 
+	if (paramsDraw->resolutionY > MAX_RESOLUTION_Y) {
+		fprintf(stderr, "[Error] El valor de la resolucion en el eje Y debe de ser menores a %i.\n", MAX_RESOLUTION_Y);
+
+		return ERROR_FORMAT;
+	}
+
 	length = strlen(params->resolution);
 	length -= positionX;
 	char resolutionY[length];
@@ -350,6 +345,12 @@ int getValidResolution(params * params, paramsDraw * paramsDraw)  {
 	paramsDraw->resolutionX =  atoi(resolutionY);
 	if (paramsDraw->resolutionX <= 0) {
 		fprintf(stderr, "[Error] Los valores de la resolucion deben de ser mayores a cero.\n");
+
+		return ERROR_FORMAT;
+	}
+
+	if (paramsDraw->resolutionX > MAX_RESOLUTION_X) {
+		fprintf(stderr, "[Error] El valor de la resolucion en el eje X debe de ser menores a %i.\n", MAX_RESOLUTION_X);
 
 		return ERROR_FORMAT;
 	}
@@ -458,7 +459,7 @@ int getValidComplex(params * params, paramsDraw * paramsDraw, int loadCenter, in
 		 * - = 45
 		 * . = 46
 		 */
-		if ((caracterInt < 48 && caracterInt > 57) && caracterInt != 43 && caracterInt != 45 && caracterInt != 46) {
+		if ((caracterInt < 48 || caracterInt > 57) && caracterInt != 43 && caracterInt != 45 && caracterInt != 46) {
 			caracterOkey = FALSE;
 		} else {
 			if (caracterInt != 43 && caracterInt != 45) {
@@ -476,7 +477,7 @@ int getValidComplex(params * params, paramsDraw * paramsDraw, int loadCenter, in
 	}
 	real[posSign] = '\0';
 
-	if (quantityPoint > 1 && caracterOkey == FALSE) {
+	if (quantityPoint > 1 || caracterOkey == FALSE) {
 		if (loadCenter == TRUE) {
 			fprintf(stderr, "[Error] Formato incorrecto del numero complejo para el centro.\n");
 		}
@@ -489,6 +490,13 @@ int getValidComplex(params * params, paramsDraw * paramsDraw, int loadCenter, in
 	}
 
 	double realPart = (double)(atof(real));
+
+	if (loadSeed == TRUE && realPart > MAX_SEED_REAL) {
+		fprintf(stderr, "[Error] La parte real de la semilla no debe de ser mayor a %i en modulo.\n", MAX_SEED_REAL);
+
+		return ERROR_FORMAT;
+	}
+
 	if (isNegative == TRUE) {
 		realPart = realPart * (-1);
 	}
@@ -522,7 +530,7 @@ int getValidComplex(params * params, paramsDraw * paramsDraw, int loadCenter, in
 	}
 	imaginary[length - 1] = '\0';
 
-	if (quantityPoint > 1 && caracterOkey == FALSE) {
+	if (quantityPoint > 1 || caracterOkey == FALSE) {
 		if (loadCenter == TRUE) {
 			fprintf(stderr, "[Error] Formato incorrecto del numero complejo para el centro.\n");
 		}
@@ -535,6 +543,12 @@ int getValidComplex(params * params, paramsDraw * paramsDraw, int loadCenter, in
 	}
 
 	double imaginaryPart = (double)(atof(imaginary));
+	if (loadSeed == TRUE && imaginaryPart > MAX_SEED_IMAGINARY) {
+		fprintf(stderr, "[Error] La parte imaginaria de la semilla no debe de ser mayor a %i en modulo.\n", MAX_SEED_IMAGINARY);
+
+		return ERROR_FORMAT;
+	}
+
 	if (complex[posSign] == '-') {
 		imaginaryPart = imaginaryPart * (-1);
 	}
@@ -563,7 +577,7 @@ int getValidWidth(params * params, paramsDraw * paramsDraw) {
 	int caracterInt;
 	int quantityPoint = 0;
 	int i;
-	for (i = 1; i < strlen(params->width); i++) {
+	for (i = 0; i < strlen(params->width); i++) {
 		caracterInt = params->width[i];
 		/*
 		 * 0 = 48
@@ -604,8 +618,8 @@ int getValidHeight(params * params, paramsDraw * paramsDraw) {
 	int caracterInt;
 	int quantityPoint = 0;
 	int i;
-	for (i = 1; i < strlen(params->height); i++) {
-		caracterInt = params->width[i];
+	for (i = 0; i < strlen(params->height); i++) {
+		caracterInt = params->height[i];
 		/*
 		 * 0 = 48
 		 * 9 = 57
@@ -635,12 +649,6 @@ int getValidHeight(params * params, paramsDraw * paramsDraw) {
 }
 
 int getValidPathOutput(params * params, paramsDraw * paramsDraw) {
-	if (params->output == NULL) {
-		fprintf(stderr, "[Error] Debe de especificar archivo de salida en los parametros (salida estandar: -).\n");
-
-		return ERROR_FORMAT;
-	}
-
 	if (params->output == NULL || strcmp("-",params->output) == 0) {
 		paramsDraw->pathOutput = params->output;
 
@@ -689,7 +697,7 @@ int getValidPathOutput(params * params, paramsDraw * paramsDraw) {
 
 	int quantityCaracterExtension = strlen(params->output) - positionPoint; // 6 - 2 = 4
 	if (quantityCaracterExtension != 4) {
-		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+		fprintf(stderr, "[Error] Extension incorrecta para el archivo de salida.\n");
 
 		return ERROR_FORMAT;
 	}
@@ -701,22 +709,22 @@ int getValidPathOutput(params * params, paramsDraw * paramsDraw) {
 	}
 	positionPoint++;
 
-	if (params->output[positionPoint] != 'p') {
-		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+	if (params->output[positionPoint] != 'p' && params->output[positionPoint] != 'P') {
+		fprintf(stderr, "[Error] Extension incorrecta para el archivo de salida.\n");
 
 		return ERROR_FORMAT;
 	}
 	positionPoint++;
 
-	if (params->output[positionPoint] != 'g') {
-		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+	if (params->output[positionPoint] != 'g' && params->output[positionPoint] != 'G') {
+		fprintf(stderr, "[Error] Extension incorrecta para el archivo de salida.\n");
 
 		return ERROR_FORMAT;
 	}
 	positionPoint++;
 
-	if (params->output[positionPoint] != 'm') {
-		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
+	if (params->output[positionPoint] != 'm' && params->output[positionPoint] != 'M') {
+		fprintf(stderr, "[Error] Extension incorrecta para el archivo de salida.\n");
 
 		return ERROR_FORMAT;
 	}
@@ -778,37 +786,26 @@ int execute(int argc, char *argv[]) {
 	/*
 	 * Obtenemos los parámetros ingresados.
 	 */
-	 actions action = retrieveParams(argc,argv,&p);
+	 int rdoValidationParams = retrieveParams(argc,argv,&p);
 
 	/*
 	 * Chequeo de errores en la obtención de parámetros.
 	 * Si el resultado no es OKEY(0) termino la ejecución.
 	 */
-	if (action.incorrectOption == TRUE || p.output == NULL) {
+	if (rdoValidationParams != OKEY) {
 		fprintf(stderr, "[Error] Incorrecta option de menu.\n");
 
 		return ERROR_PARAM;
 	}
 
-	if (p.output == NULL) {
-		fprintf(stderr, "[Error] Debe de especificar archivo de salida en los parametros (salida estandar: -).\n");
-
-		return ERROR_PARAM;
-	}
-
-
 	/*
 	 * Ejecutamos el fractal con los parámetros ingresados.
 	 */
-	if (action.draw == TRUE) {
-		return executeFractal(&p);
-	}
-
-	return ERROR_PARAM;
+	return executeFractal(&p);
 }
 
 int main(int argc, char *argv[]) {
-	// / -o -  => 3 parameters as minimum
+	// / -  => 2 parameters as minimum
 	// / -r 640x500 -c 0.145-89.2i -w 0.05 -h 2 -s -0.256+145i -o one.pgm  => 13 parameters as maximum
 
 	/*
