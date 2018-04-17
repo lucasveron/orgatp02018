@@ -2495,107 +2495,109 @@ $LC36:
 	.globl	getValidPathOutput
 	.ent	getValidPathOutput
 getValidPathOutput:
-	.frame	$fp,72,$ra		# vars= 32, regs= 3/0, args= 16, extra= 8
+	.frame	$fp,64,$ra		# vars= 24, regs= 3/0, args= 16, extra= 8
 	.mask	0xd0000000,-8
 	.fmask	0x00000000,0
 	.set	noreorder
 	.cpload	$t9
 	.set	reorder
-	subu	$sp,$sp,72
+	subu	$sp,$sp,64
 	.cprestore 16
-	sw	$ra,64($sp)
-	sw	$fp,60($sp)
-	sw	$gp,56($sp)
+	sw	$ra,56($sp)
+	sw	$fp,52($sp)
+	sw	$gp,48($sp)
 	move	$fp,$sp
-	sw	$a0,72($fp)
-	sw	$a1,76($fp)
-	lw	$v0,72($fp)
+	sw	$a0,64($fp)
+	sw	$a1,68($fp)
+	lw	$v0,64($fp)
 	lw	$v0,20($v0)
 	beq	$v0,$zero,$L227
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	la	$a0,$LC15
 	lw	$a1,20($v0)
 	la	$t9,strcmp
 	jal	$ra,$t9
 	bne	$v0,$zero,$L226
 $L227:
-	lw	$v0,76($fp)
-	lw	$v1,72($fp)
+	lw	$v0,68($fp)
+	lw	$v1,64($fp)
 	lw	$v1,20($v1)
 	sw	$v1,56($v0)
-	sw	$zero,48($fp)
+	sw	$zero,44($fp)
 	b	$L225
 $L226:
 	sw	$zero,24($fp)
 	li	$v0,-1			# 0xffffffffffffffff
 	sw	$v0,28($fp)
-	sw	$zero,32($fp)
-	sw	$zero,40($fp)
+	sw	$zero,36($fp)
 $L228:
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$a0,20($v0)
 	la	$t9,strlen
 	jal	$ra,$t9
 	move	$v1,$v0
-	lw	$v0,40($fp)
+	lw	$v0,36($fp)
 	sltu	$v0,$v0,$v1
 	bne	$v0,$zero,$L231
 	b	$L229
 $L231:
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$v1,20($v0)
-	lw	$v0,40($fp)
+	lw	$v0,36($fp)
 	addu	$v0,$v1,$v0
 	lb	$v0,0($v0)
-	sw	$v0,36($fp)
-	lw	$v1,36($fp)
+	sw	$v0,32($fp)
+	lw	$v1,32($fp)
 	li	$v0,46			# 0x2e
 	bne	$v1,$v0,$L232
-	lw	$v0,32($fp)
-	addu	$v0,$v0,1
-	sw	$v0,32($fp)
-	lw	$v0,40($fp)
+	lw	$v0,36($fp)
 	sw	$v0,28($fp)
 	b	$L230
 $L232:
-	lw	$v0,36($fp)
+	lw	$v0,32($fp)
 	slt	$v0,$v0,48
 	bne	$v0,$zero,$L235
-	lw	$v0,36($fp)
+	lw	$v0,32($fp)
 	slt	$v0,$v0,58
 	beq	$v0,$zero,$L235
 	b	$L230
 $L235:
-	lw	$v0,36($fp)
+	lw	$v0,32($fp)
 	slt	$v0,$v0,65
 	bne	$v0,$zero,$L236
-	lw	$v0,36($fp)
+	lw	$v0,32($fp)
 	slt	$v0,$v0,91
 	beq	$v0,$zero,$L236
 	b	$L230
 $L236:
-	lw	$v0,36($fp)
+	lw	$v0,32($fp)
 	slt	$v0,$v0,97
 	bne	$v0,$zero,$L237
-	lw	$v0,36($fp)
+	lw	$v0,32($fp)
 	slt	$v0,$v0,123
 	beq	$v0,$zero,$L237
 	b	$L230
 $L237:
+	lw	$v1,32($fp)
+	li	$v0,47			# 0x2f
+	beq	$v1,$v0,$L230
+	lw	$v1,32($fp)
+	li	$v0,45			# 0x2d
+	beq	$v1,$v0,$L230
+	lw	$v1,32($fp)
+	li	$v0,95			# 0x5f
+	beq	$v1,$v0,$L230
 	li	$v0,1			# 0x1
 	sw	$v0,24($fp)
 $L230:
-	lw	$v0,40($fp)
+	lw	$v0,36($fp)
 	addu	$v0,$v0,1
-	sw	$v0,40($fp)
+	sw	$v0,36($fp)
 	b	$L228
 $L229:
 	lw	$v1,24($fp)
 	li	$v0,1			# 0x1
 	beq	$v1,$v0,$L239
-	lw	$v1,32($fp)
-	li	$v0,1			# 0x1
-	bne	$v1,$v0,$L239
 	lw	$v0,28($fp)
 	bne	$v0,$zero,$L238
 $L239:
@@ -2604,18 +2606,18 @@ $L239:
 	la	$t9,fprintf
 	jal	$ra,$t9
 	li	$v0,6			# 0x6
-	sw	$v0,48($fp)
+	sw	$v0,44($fp)
 	b	$L225
 $L238:
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$a0,20($v0)
 	la	$t9,strlen
 	jal	$ra,$t9
 	move	$v1,$v0
 	lw	$v0,28($fp)
 	subu	$v0,$v1,$v0
-	sw	$v0,44($fp)
-	lw	$v1,44($fp)
+	sw	$v0,40($fp)
+	lw	$v1,40($fp)
 	li	$v0,4			# 0x4
 	beq	$v1,$v0,$L240
 	la	$a0,__sF+176
@@ -2623,10 +2625,10 @@ $L238:
 	la	$t9,fprintf
 	jal	$ra,$t9
 	li	$v0,6			# 0x6
-	sw	$v0,48($fp)
+	sw	$v0,44($fp)
 	b	$L225
 $L240:
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$v1,20($v0)
 	lw	$v0,28($fp)
 	addu	$v0,$v1,$v0
@@ -2638,20 +2640,20 @@ $L240:
 	la	$t9,fprintf
 	jal	$ra,$t9
 	li	$v0,6			# 0x6
-	sw	$v0,48($fp)
+	sw	$v0,44($fp)
 	b	$L225
 $L241:
 	lw	$v0,28($fp)
 	addu	$v0,$v0,1
 	sw	$v0,28($fp)
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$v1,20($v0)
 	lw	$v0,28($fp)
 	addu	$v0,$v1,$v0
 	lb	$v1,0($v0)
 	li	$v0,112			# 0x70
 	beq	$v1,$v0,$L242
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$v1,20($v0)
 	lw	$v0,28($fp)
 	addu	$v0,$v1,$v0
@@ -2663,20 +2665,20 @@ $L241:
 	la	$t9,fprintf
 	jal	$ra,$t9
 	li	$v0,6			# 0x6
-	sw	$v0,48($fp)
+	sw	$v0,44($fp)
 	b	$L225
 $L242:
 	lw	$v0,28($fp)
 	addu	$v0,$v0,1
 	sw	$v0,28($fp)
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$v1,20($v0)
 	lw	$v0,28($fp)
 	addu	$v0,$v1,$v0
 	lb	$v1,0($v0)
 	li	$v0,103			# 0x67
 	beq	$v1,$v0,$L243
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$v1,20($v0)
 	lw	$v0,28($fp)
 	addu	$v0,$v1,$v0
@@ -2688,20 +2690,20 @@ $L242:
 	la	$t9,fprintf
 	jal	$ra,$t9
 	li	$v0,6			# 0x6
-	sw	$v0,48($fp)
+	sw	$v0,44($fp)
 	b	$L225
 $L243:
 	lw	$v0,28($fp)
 	addu	$v0,$v0,1
 	sw	$v0,28($fp)
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$v1,20($v0)
 	lw	$v0,28($fp)
 	addu	$v0,$v1,$v0
 	lb	$v1,0($v0)
 	li	$v0,109			# 0x6d
 	beq	$v1,$v0,$L244
-	lw	$v0,72($fp)
+	lw	$v0,64($fp)
 	lw	$v1,20($v0)
 	lw	$v0,28($fp)
 	addu	$v0,$v1,$v0
@@ -2713,20 +2715,20 @@ $L243:
 	la	$t9,fprintf
 	jal	$ra,$t9
 	li	$v0,6			# 0x6
-	sw	$v0,48($fp)
+	sw	$v0,44($fp)
 	b	$L225
 $L244:
-	lw	$v0,76($fp)
-	lw	$v1,72($fp)
+	lw	$v0,68($fp)
+	lw	$v1,64($fp)
 	lw	$v1,20($v1)
 	sw	$v1,56($v0)
-	sw	$zero,48($fp)
+	sw	$zero,44($fp)
 $L225:
-	lw	$v0,48($fp)
+	lw	$v0,44($fp)
 	move	$sp,$fp
-	lw	$ra,64($sp)
-	lw	$fp,60($sp)
-	addu	$sp,$sp,72
+	lw	$ra,56($sp)
+	lw	$fp,52($sp)
+	addu	$sp,$sp,64
 	j	$ra
 	.end	getValidPathOutput
 	.size	getValidPathOutput, .-getValidPathOutput

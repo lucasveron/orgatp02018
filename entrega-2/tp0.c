@@ -818,7 +818,6 @@ int getValidPathOutput(params * params, paramsDraw * paramsDraw) {
 
 	int isCaracterOkey = TRUE;
 	int positionPoint = -1;
-	int quantityPoint = 0;
 	int caracterInt;
 	int i;
 	for (i = 0; i < strlen(params->output); i++) {
@@ -834,16 +833,23 @@ int getValidPathOutput(params * params, paramsDraw * paramsDraw) {
 		 * z = 122
 		 *
 		 * . = 46
+		 *
+		 * / = 47
+		 *
+		 * - = 45
+		 *
+		 * _ = 95
 		 */
 		if (caracterInt == 46) {
-			quantityPoint++;
+			// Trato de quedarme con el ultimo punto
 			positionPoint = i;
-		} else if (!( (caracterInt >= 48 && caracterInt <= 57) || (caracterInt >= 65 && caracterInt <= 90) || (caracterInt >= 97 && caracterInt <= 122) )) {
+		} else if (!( (caracterInt >= 48 && caracterInt <= 57) || (caracterInt >= 65 && caracterInt <= 90) || (caracterInt >= 97 && caracterInt <= 122) )
+				&& caracterInt != 47 && caracterInt != 45 && caracterInt != 95) {
 			isCaracterOkey = FALSE;
 		}
 	}
 
-	if (isCaracterOkey == FALSE || quantityPoint != 1 || positionPoint == 0) {
+	if (isCaracterOkey == FALSE || positionPoint == 0) {
 		fprintf(stderr, "[Error] Formato incorrecto como nombre de archivo de salida.\n");
 
 		return ERROR_FORMAT;
