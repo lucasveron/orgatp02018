@@ -165,10 +165,14 @@ else
  echo $varError
 fi
 
+echo "###----------###    FIN de la validacion de los parametros.    ###----------###"
+echo ""
+echo "###----------###    COMIENZO validacion automática de imagen patron.    ###----------###"
 varError=$(./tp0 -r 5x5 -o 5x5auto.pgm 2>&1)
 if [ "$varError" = "" ];
- then echo "./tp0 -r 5x5 -o 5x5auto.pgm corrio ... [OK]";
- echo "validacion diff con imagen patron"
+ then echo "./tp0 -r 5x5 -o 5x5auto.pgm corrio ......[OK]";
+ echo "validacion diff con imagen patron ..."
+ echo ""
  varErro2=$(diff 5x5auto.pgm 5x5manual.pgm 2>&1)
  if ["$varError" = ""];
 	then echo "validacion diff con imagen patron .......[OK]";
@@ -179,8 +183,8 @@ else
  echo "./tp0 -o uno.pgm23 corrio con ERROR!!! - Resultado obtenido: ";
  echo $varError
 fi
-
-echo "###----------###    FIN de la validacion de los parametros.    ###----------###"
+echo ""
+echo "###----------###    FIN validacion automática de imagen patron.    ###----------###"
 
 echo "##############################################################################"
 echo "########################## FIN Tests automaticos  ################################"
