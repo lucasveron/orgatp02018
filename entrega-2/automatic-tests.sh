@@ -4,10 +4,6 @@ echo "##########################################################################
 echo "########################## Tests automaticos  ################################"
 echo "##############################################################################"
 
-
-#DIRECTORIO=/root1
-#echo "El directorio ${DIRECTORIO} existe"
-
 echo "Se guardaran los archivos resultantes de los tests en el directorio ./outputs-automatic-tests"
 
 if [ -d "./outputs-automatic-tests" ]
